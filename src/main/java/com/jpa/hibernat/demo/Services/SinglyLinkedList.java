@@ -17,6 +17,7 @@ public class SinglyLinkedList {
         int var=0;
         int master=0;
         int Feat2=0;
+        int dev =0;
         return head;
     }
 }
