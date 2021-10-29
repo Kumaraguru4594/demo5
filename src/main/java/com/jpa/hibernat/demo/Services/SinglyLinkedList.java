@@ -14,6 +14,7 @@ public class SinglyLinkedList {
         head = node;
         tail = node;
         size =1;
+        int var=0;
         return head;
     }
 }
