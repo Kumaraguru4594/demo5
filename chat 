@@ -1,0 +1,231 @@
+Sure, here's a complete example of a chatbot application using Spring Boot for the backend with WebSocket communication and CORS configuration:
+
+**Backend (Spring Boot):**
+
+1. **Dependencies:**
+
+   Ensure you have the necessary dependencies in your `pom.xml` file:
+
+   ```xml
+   <!-- Spring Boot Starter Web for RESTful APIs -->
+   <dependency>
+       <groupId>org.springframework.boot</groupId>
+       <artifactId>spring-boot-starter-web</artifactId>
+   </dependency>
+   
+   <!-- Spring Boot Starter WebSocket for WebSocket support -->
+   <dependency>
+       <groupId>org.springframework.boot</groupId>
+       <artifactId>spring-boot-starter-websocket</artifactId>
+   </dependency>
+   ```
+
+2. **CORS Configuration:**
+
+   Configure CORS support in your Spring Boot application.
+
+   ```java
+   // CorsConfig.java
+   import org.springframework.context.annotation.Configuration;
+   import org.springframework.web.servlet.config.annotation.CorsRegistry;
+   import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+   @Configuration
+   public class CorsConfig implements WebMvcConfigurer {
+       @Override
+       public void addCorsMappings(CorsRegistry registry) {
+           registry.addMapping("/ws").allowedOrigins("*"); // Allow requests from all origins
+       }
+   }
+   ```
+
+3. **WebSocket Configuration:**
+
+   Configure WebSocket support in your Spring Boot application.
+
+   ```java
+   // WebSocketConfig.java
+   import org.springframework.context.annotation.Configuration;
+   import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+   import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
+   import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
+   import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+
+   @Configuration
+   @EnableWebSocketMessageBroker
+   public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+       @Override
+       public void configureMessageBroker(MessageBrokerRegistry config) {
+           config.enableSimpleBroker("/topic");
+           config.setApplicationDestinationPrefixes("/app");
+       }
+
+       @Override
+       public void registerStompEndpoints(StompEndpointRegistry registry) {
+           registry.addEndpoint("/ws").setAllowedOrigins("*").withSockJS();
+       }
+   }
+   ```
+
+4. **Controller:**
+
+   Create a controller to handle WebSocket connections and messages.
+
+   ```java
+   // ChatController.java
+   import org.springframework.messaging.handler.annotation.MessageMapping;
+   import org.springframework.messaging.handler.annotation.SendTo;
+   import org.springframework.stereotype.Controller;
+
+   @Controller
+   public class ChatController {
+
+       @MessageMapping("/chat")
+       @SendTo("/topic/messages")
+       public Message processMessage(Message message) {
+           String userMessage = message.getContent();
+           // Process the user message here (e.g., interact with a chatbot)
+           String botResponse = "Echo: " + userMessage; // Echo back the user message
+           return new Message(botResponse);
+       }
+   }
+   ```
+
+5. **Message Class:**
+
+   Define a simple class to represent messages.
+
+   ```java
+   // Message.java
+   public class Message {
+       private String content;
+
+       public Message() {}
+
+       public Message(String content) {
+           this.content = content;
+       }
+
+       // Getters and setters
+       public String getContent() {
+           return content;
+       }
+
+       public void setContent(String content) {
+           this.content = content;
+       }
+   }
+   ```
+
+**Frontend (React):**
+
+1. **Install Dependencies:**
+
+   Create a new React app and install the necessary dependencies:
+
+   ```bash
+   npx create-react-app chatbot-app
+   cd chatbot-app
+   npm install sockjs-client stompjs
+   ```
+
+2. **Chat Component:**
+
+   Create a chat component to handle user input and display messages.
+
+   ```jsx
+   // src/ChatComponent.js
+   import React, { useState, useEffect } from 'react';
+   import Stomp from 'stompjs';
+   import SockJS from 'sockjs-client';
+
+   const ChatComponent = () => {
+       const [stompClient, setStompClient] = useState(null);
+       const [messages, setMessages] = useState([]);
+       const [userInput, setUserInput] = useState('');
+
+       useEffect(() => {
+           const socket = new SockJS('http://localhost:8080/ws');
+           const stomp = Stomp.over(socket);
+           stomp.connect({}, () => {
+               setStompClient(stomp);
+           });
+           return () => {
+               if (stompClient) {
+                   stompClient.disconnect();
+               }
+           };
+       }, []);
+
+       const handleSendMessage = () => {
+           if (!stompClient) return;
+           if (!userInput.trim()) return;
+           stompClient.send('/app/chat', {}, JSON.stringify({ content: userInput }));
+           setUserInput('');
+       };
+
+       const handleMessageChange = (event) => {
+           setUserInput(event.target.value);
+       };
+
+       const renderMessages = () => {
+           return messages.map((message, index) => (
+               <div key={index} className="message">
+                   {message.content}
+               </div>
+           ));
+       };
+
+       useEffect(() => {
+           if (!stompClient) return;
+           stompClient.subscribe('/topic/messages', (response) => {
+               const message = JSON.parse(response.body);
+               setMessages((prevMessages) => [...prevMessages, message]);
+           });
+       }, [stompClient]);
+
+       return (
+           <div className="chat-container">
+               <div className="messages-container">{renderMessages()}</div>
+               <div className="input-container">
+                   <input
+                       type="text"
+                       placeholder="Type your message..."
+                       value={userInput}
+                       onChange={handleMessageChange}
+                   />
+                   <button onClick={handleSendMessage}>Send</button>
+               </div>
+           </div>
+       );
+   };
+
+   export default ChatComponent;
+   ```
+
+3. **App Component:**
+
+   Integrate the chat component into the main app component.
+
+   ```jsx
+   // src/App.js
+   import React from 'react';
+   import './App.css';
+   import ChatComponent from './ChatComponent';
+
+   function App() {
+       return (
+           <div className="App">
+               <header className="App-header">
+                   <h1>Chatbot Demo</h1>
+               </header>
+               <ChatComponent />
+           </div>
+       );
+   }
+
+   export default App;
+   ```
+
+With these configurations, you should have a complete chatbot application with WebSocket communication using Spring Boot for the backend and React for the frontend, with CORS configuration to allow communication between them. Adjust the configurations and code snippets according to your specific requirements and deployment environment.
