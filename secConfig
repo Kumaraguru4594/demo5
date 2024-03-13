@@ -1,0 +1,48 @@
+If you're encountering the "has been blocked by CORS policy: No 'Access-Control-Allow-Origin'" error, it means that the server is not configured to allow requests from your frontend domain or origin.
+
+To resolve this issue, you need to configure Cross-Origin Resource Sharing (CORS) on your Spring Boot backend to allow requests from your React frontend. Here's how you can do it:
+
+1. **Enable CORS in Spring Boot:**
+
+   Add CORS configuration to your Spring Boot application. You can do this by creating a `WebMvcConfigurer` bean and overriding the `addCorsMappings` method.
+
+   ```java
+   import org.springframework.context.annotation.Configuration;
+   import org.springframework.web.servlet.config.annotation.CorsRegistry;
+   import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+   @Configuration
+   public class CorsConfig implements WebMvcConfigurer {
+       @Override
+       public void addCorsMappings(CorsRegistry registry) {
+           registry.addMapping("/ws").allowedOrigins("http://localhost:3000"); // Adjust the origin as needed
+       }
+   }
+   ```
+
+   In this example, `"http://localhost:3000"` is the origin of your React frontend. Adjust it to match the URL of your frontend application.
+
+2. **Allow CORS in Spring Security (if applicable):**
+
+   If you're using Spring Security in your application, you may need to configure CORS support there as well. You can do this by adding CORS configuration to your security configuration class.
+
+   ```java
+   import org.springframework.context.annotation.Configuration;
+   import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+   import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+   import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+
+   @Configuration
+   @EnableWebSecurity
+   public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+       @Override
+       protected void configure(HttpSecurity http) throws Exception {
+           http.cors(); // Enable CORS support
+           // Additional security configurations...
+       }
+   }
+   ```
+
+   Enabling CORS support in Spring Security ensures that CORS headers are included in responses for secured endpoints.
+
+With these configurations in place, your Spring Boot backend should allow requests from your React frontend, and you should no longer encounter the CORS policy error. Adjust the CORS settings according to your specific requirements and deployment environment.
