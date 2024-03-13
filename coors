@@ -1,0 +1,52 @@
+To enable the Access-Control-Allow-Origin header in a Spring Boot application, you need to configure CORS (Cross-Origin Resource Sharing) support. Here's how you can do it:
+
+1. **Create a Configuration Class:**
+
+   Create a configuration class to configure CORS settings. This class should implement the `WebMvcConfigurer` interface and override the `addCorsMappings` method to define the allowed origins, methods, headers, etc.
+
+   ```java
+   import org.springframework.context.annotation.Configuration;
+   import org.springframework.web.servlet.config.annotation.CorsRegistry;
+   import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+   @Configuration
+   public class CorsConfig implements WebMvcConfigurer {
+       @Override
+       public void addCorsMappings(CorsRegistry registry) {
+           registry.addMapping("/api/**") // Specify the URL pattern to which this CORS configuration applies
+                   .allowedOrigins("http://localhost:3000") // Allow requests from this origin
+                   .allowedMethods("GET", "POST", "PUT", "DELETE") // Allow these HTTP methods
+                   .allowedHeaders("*"); // Allow all headers
+       }
+   }
+   ```
+
+   Adjust the `allowedOrigins`, `allowedMethods`, and `allowedHeaders` as needed for your application.
+
+2. **Enable CORS Globally:**
+
+   If you want to enable CORS globally for all endpoints, you can add `@CrossOrigin` annotation at the controller level or method level. This is a simpler approach but less flexible than configuring CORS with `WebMvcConfigurer`.
+
+   ```java
+   import org.springframework.web.bind.annotation.CrossOrigin;
+   import org.springframework.web.bind.annotation.GetMapping;
+   import org.springframework.web.bind.annotation.RestController;
+
+   @RestController
+   @CrossOrigin(origins = "http://localhost:3000")
+   public class ExampleController {
+
+       @GetMapping("/api/example")
+       public String getExample() {
+           return "Hello from example API";
+       }
+   }
+   ```
+
+   This will allow requests from `http://localhost:3000` to access the `/api/example` endpoint.
+
+3. **Test CORS Configuration:**
+
+   After configuring CORS, make sure to test it thoroughly to ensure that requests from allowed origins are processed correctly and requests from disallowed origins are rejected with the appropriate CORS headers.
+
+With these configurations, your Spring Boot application should include the Access-Control-Allow-Origin header in responses to requests from the specified origins, allowing cross-origin requests from those origins. Adjust the configurations according to your specific requirements and security considerations.
