@@ -1,0 +1,79 @@
+To fetch search results from a search engine website using Jsoup in your Spring Boot backend, you can follow these steps:
+
+1. **Identify the search engine URL:** Determine the URL of the search engine website you want to scrape. For example, for Google, it would be something like `"https://www.google.com/search?q=your+query"`.
+
+2. **Construct the search query URL:** Construct the URL by appending the search query to the search engine URL. Make sure to properly encode the query string if it contains special characters.
+
+3. **Fetch search results using Jsoup:** Use Jsoup to send an HTTP GET request to the constructed URL and parse the HTML response to extract search results.
+
+4. **Extract relevant information:** Identify the HTML structure of the search results page and use Jsoup selectors to extract relevant information such as titles, URLs, and descriptions.
+
+5. **Create a data model:** Create a data model in your Spring Boot backend to represent the search results. This model will be used to serialize the search results and send them over WebSocket.
+
+6. **Send search results over WebSocket:** Serialize the search results into JSON format and send them over WebSocket to your React frontend.
+
+Here's an example implementation of how you can fetch search results from Google using Jsoup in your Spring Boot backend:
+
+```java
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class SearchEngineScraper {
+    public static List<SearchResult> fetchSearchResults(String query) {
+        String searchUrl = "https://www.google.com/search?q=" + query.replace(" ", "+");
+
+        try {
+            Document doc = Jsoup.connect(searchUrl).get();
+            Elements searchResults = doc.select("div.g");
+
+            List<SearchResult> results = new ArrayList<>();
+
+            for (Element result : searchResults) {
+                Element titleElement = result.select("h3").first();
+                Element urlElement = result.select("a[href]").first();
+                Element descriptionElement = result.select("div.s").first();
+
+                if (titleElement != null && urlElement != null && descriptionElement != null) {
+                    String title = titleElement.text();
+                    String url = urlElement.attr("href");
+                    String description = descriptionElement.text();
+
+                    SearchResult searchResult = new SearchResult(title, url, description);
+                    results.add(searchResult);
+                }
+            }
+
+            return results;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+}
+```
+
+And here's the `SearchResult` class:
+
+```java
+public class SearchResult {
+    private String title;
+    private String url;
+    private String description;
+
+    public SearchResult(String title, String url, String description) {
+        this.title = title;
+        this.url = url;
+        this.description = description;
+    }
+
+    // Getters and setters
+}
+```
+
+You can then call the `fetchSearchResults(query)` method from your WebSocket controller and send the results over WebSocket to your React frontend. Ensure that you handle errors and edge cases appropriately in your implementation.
