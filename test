@@ -1,0 +1,143 @@
+Certainly! Here's a professionally formatted Minutes of Meeting (MoM) based on your screenshots, organized for clarity and alignment with your topic: “High Availability Testing on New Infrastructure”.
+
+
+---
+
+📅 Minutes of Meeting
+
+Topic: High Availability Test on New Infrastructure
+Date: 11 July 2025
+Time: [Insert Time]
+Participants: Infra Team, DevOps, WebMethods App Team, PSS, MQ Admin Team
+Facilitator: [Insert Name]
+
+
+---
+
+🧾 Summary
+
+The session focused on failover mechanisms, system behavior under abrupt interruptions, and message handling during infrastructure-level recovery in the newly containerized WebMethods setup. NGINX, UM, and NAS behaviors were specifically discussed.
+
+
+---
+
+✅ Key Discussion Points
+
+🔁 Failover Design
+
+Failover is currently tested and validated only on the HK side.
+
+Failover scenarios are covered at:
+
+NGINX level
+
+Application (AP) level
+
+Pod level
+
+
+
+🌐 NGINX Behavior
+
+HK NGINX setup is active-passive, with automatic switchovers when primary fails.
+
+UM is also in active-passive configuration.
+
+
+⚙️ UM Monitoring Script
+
+A shell script checks UM's exit code every 5 minutes.
+
+If UM fails abruptly, the script restarts UM in server 03.
+
+Server 00 is always intended to be the primary UM instance.
+
+
+📝 NAS Behavior
+
+UM writes to NAS by the 3rd minute after start.
+
+Current NAS usage already exceeds 20 GB — may require cleanup or expansion.
+
+
+
+---
+
+❓ Questions Raised
+
+1. Hardware Configuration Clarity
+
+Confirmed:
+
+16-core setup, 128 GB RAM
+
+32 + 32 = 64 GB (application allocation?)
+
+Memory block: 256 + 256 = 512 GB + 128 GB (possibly across nodes)
+
+
+
+
+2. Recovery Delay
+
+Script runs every 5 minutes — considered too long for real-time recovery.
+
+
+
+3. Message Reliability
+
+Will there be message loss if UM goes down suddenly and recovers on another node?
+
+
+
+4. Load Testing Timing
+
+Will load testing be performed before or after recovery test?
+
+
+
+5. Resubmission Behavior
+
+In case of failure, will message resubmission succeed, or require manual intervention?
+
+Noted: manual stop/start may fail for messages in-transit.
+
+
+
+
+
+---
+
+🚩 Risks & Observations
+
+Delayed failover (5 mins) may lead to:
+
+In-transit message failures
+
+Duplicate processing (if resubmission is manual)
+
+
+NAS capacity must be reviewed and possibly expanded before full HA testing.
+
+No confirmation yet on testing UM failover on SG region.
+
+
+
+---
+
+📌 Action Items
+
+Item	Owner	Due Date
+
+Optimize UM health-check script to reduce detection delay	DevOps	[Insert Date]
+Validate message reliability on abrupt UM failure	Dev Team + PSS	[Insert Date]
+Confirm load test sequence (pre vs post failover)	QA Lead	[Insert Date]
+Monitor and cleanup NAS, ensure capacity	Infra + Storage Team	[Insert Date]
+Document failover behaviors across NGINX/UM	Infra Team	[Insert Date]
+
+
+
+---
+
+Would you like this exported in Word, Notion, or a Markdown version for your internal team or Confluence? I can generate a downloadable version as well.
+
